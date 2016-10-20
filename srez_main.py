@@ -55,8 +55,8 @@ tf.app.flags.DEFINE_integer('summary_period', 200,
 tf.app.flags.DEFINE_integer('random_seed', 0,
                             "Seed used to initialize rng.")
 
-tf.app.flags.DEFINE_integer('test_vectors', 16,
-                            """Number of features to use for testing""")
+tf.app.flags.DEFINE_integer('test_set_size', 16,
+                            """Number of images to use for testing""")
                             
 tf.app.flags.DEFINE_string('train_dir', 'train',
                            "Output folder where training logs are dumped.")
@@ -145,8 +145,8 @@ def _train():
     all_filenames = prepare_dirs(delete_train_dir=True)
 
     # Separate training and test sets
-    train_filenames = all_filenames[:-FLAGS.test_vectors]
-    test_filenames  = all_filenames[-FLAGS.test_vectors:]
+    train_filenames = all_filenames[:-FLAGS.test_set_size]
+    test_filenames  = all_filenames[-FLAGS.test_set_size:]
 
     # TBD: Maybe download dataset here
 
