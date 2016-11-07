@@ -64,6 +64,9 @@ tf.app.flags.DEFINE_string('train_dir', 'train',
 tf.app.flags.DEFINE_integer('train_time', 20,
                             "Time in minutes to train the model")
 
+tf.app.flags.DEFINE_string('test_data', None,
+                            "Optional directory for test data picture - pictures have to be prepared in the right size, aligned and cropped the same way as the train data")
+
 def prepare_dirs(delete_train_dir=False):
     # Create checkpoint dir (do not delete anything)
     if not tf.gfile.Exists(FLAGS.checkpoint_dir):
@@ -75,17 +78,22 @@ def prepare_dirs(delete_train_dir=False):
             tf.gfile.DeleteRecursively(FLAGS.train_dir)
         tf.gfile.MakeDirs(FLAGS.train_dir)
 
-    # Return names of training files
-    if not tf.gfile.Exists(FLAGS.dataset) or \
-       not tf.gfile.IsDirectory(FLAGS.dataset):
-        raise FileNotFoundError("Could not find folder `%s'" % (FLAGS.dataset,))
+    return prepare_directory(FLAGS.dataset)
 
-    filenames = tf.gfile.ListDirectory(FLAGS.dataset)
+
+def prepare_directory(directory): 
+    # Return names of training files
+    if not tf.gfile.Exists(directory) or \
+       not tf.gfile.IsDirectory(directory):
+        raise FileNotFoundError("Could not find folder `%s'" % (directory,))
+
+    filenames = tf.gfile.ListDirectory(directory)
     filenames = sorted(filenames)
     random.shuffle(filenames)
-    filenames = [os.path.join(FLAGS.dataset, f) for f in filenames]
+    filenames = [os.path.join(directory, f) for f in filenames]
 
     return filenames
+
 
 
 def setup_tensorflow():
@@ -144,10 +152,15 @@ def _train():
     # Prepare directories
     all_filenames = prepare_dirs(delete_train_dir=True)
 
-    # Separate training and test sets
-    train_filenames = all_filenames[:-FLAGS.test_set_size]
-    test_filenames  = all_filenames[-FLAGS.test_set_size:]
-
+    if not FLAGS.test_data:
+        # Separate input in training and test sets
+        train_filenames = all_filenames[:-FLAGS.test_set_size]
+        test_filenames  = all_filenames[-FLAGS.test_set_size:]
+    else
+        # Use custom test set
+        train_filenames = all_filenames
+        test_filenames  = prepare_directory(FLAGS.test_data)
+    
     # TBD: Maybe download dataset here
 
     # Setup async input queues
